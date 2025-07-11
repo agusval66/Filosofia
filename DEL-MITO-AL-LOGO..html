@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Del Mito al Logos: El Origen de la Filosofía</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Papyrus & Stone -->
+    <!-- Application Structure Plan: La aplicación está diseñada como un viaje narrativo en una sola página, guiado por una cabecera de navegación fija. La estructura no sigue el informe linealmente, sino que agrupa el contenido en secciones temáticas e interactivas para una mejor usabilidad y comprensión. 1) 'Introducción' establece el escenario. 2) 'Mythos vs. Logos' utiliza una tabla interactiva para contrastar visualmente los dos modos de pensamiento. 3) 'El Crisol de Jonia' presenta los factores contextuales en tarjetas digeribles. 4) 'La Senda de los Filósofos' es el núcleo interactivo, una línea de tiempo visual que muestra la progresión y las relaciones críticas entre pensadores a través de modales. 5) 'El Gran Debate' se centra en el conflicto Heráclito-Parménides utilizando un gráfico de radar para una comparación impactante. 6) 'Legado' concluye la narrativa. 7) 'Actividad' es un quiz interactivo con desplazamiento automático para autoevaluación. Esta estructura transforma un texto denso en una exploración guiada, utilizando la interactividad para aclarar conceptos abstractos y relaciones complejas. -->
+    <!-- Visualization & Content Choices: 1. Tabla Comparativa (Mythos/Logos): Report Info -> Comparación de características. Goal -> Comparar. Viz/Method -> Tabla HTML con resaltado en JS. Interaction -> Hover sobre filas. Justification -> Más dinámico y enfocado que una tabla estática. Library/Method -> Vanilla JS, Tailwind. 2. Tarjetas de Contexto (Jonia): Report Info -> Factores socio-históricos. Goal -> Informar. Viz/Method -> Grid de tarjetas HTML. Interaction -> Hover sutil. Justification -> Mejora la legibilidad y segmentación del contenido. Library/Method -> Tailwind. 3. Línea de Tiempo de Filósofos: Report Info -> Sucesión y crítica entre filósofos. Goal -> Mostrar cambio y relación. Viz/Method -> Diagrama de flujo HTML/CSS. Interaction -> Clic en nodos para abrir modales con información detallada. Justification -> Visualiza la progresión intelectual y la crítica como motor, concepto clave del informe. Library/Method -> Vanilla JS, Tailwind. 4. Gráfico de Radar (Heráclito/Parménides): Report Info -> Oposición entre Ser y Devenir. Goal -> Comparar sistemas opuestos. Viz/Method -> Gráfico de Radar de Chart.js. Interaction -> Botones para alternar la visualización de datos. Justification -> Un gráfico de radar es ideal para mostrar la divergencia en múltiples ejes conceptuales de forma visualmente potente. Library/Method -> Chart.js (Canvas). 5. Quiz Interactivo: Goal -> Evaluar. Viz/Method -> Formulario HTML. Interaction -> Selección de opciones con feedback inmediato y auto-scroll. Justification -> Permite al usuario autoevaluar su comprensión de manera activa y fluida. Library/Method -> Vanilla JS, Tailwind. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f5f5f4; color: #292524; }
+        h1, h2, h3 { font-family: 'Lora', serif; }
+        .active-nav { color: #d97706; }
+        .modal { transition: opacity 0.25s ease, transform 0.25s ease; }
+        .modal-content { transition: transform 0.25s ease; }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 1.25rem;
+            transform: translateX(-50%);
+            width: 2px;
+            height: calc(100% + 2rem);
+            background-color: #d6d3d1;
+            z-index: 1;
+        }
+        .timeline-item:last-child::before { display: none; }
+        .timeline-connector {
+            position: absolute;
+            top: 1.25rem;
+            left: 50%;
+            right: -50%;
+            height: 2px;
+            background-color: #d6d3d1;
+            z-index: 1;
+        }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 350px; max-height: 450px; }
+        @media (min-width: 768px) { .chart-container { height: 400px; } }
+        .aspect-w-16 { position: relative; padding-bottom: 56.25%; }
+        .aspect-w-16 > iframe { position: absolute; width: 100%; height: 100%; left: 0; top: 0; }
+        .quiz-option.correct { background-color: #dcfce7 !important; border-color: #22c55e; }
+        .quiz-option.incorrect { background-color: #fee2e2 !important; border-color: #ef4444; }
+        .quiz-option { transition: background-color 0.3s, border-color 0.3s; }
+    </style>
+</head>
+<body class="bg-stone-100 text-stone-800">
+
+    <header id="main-header" class="bg-stone-100/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h3 class="text-xl font-semibold text-amber-700">Del Mito al Logos</h3>
+                <div class="hidden sm:flex items-center space-x-8 font-semibold text-stone-600">
+                    <a href="#intro" class="hover:text-amber-600 transition-colors nav-link">Inicio</a>
+                    <a href="#mythos-logos" class="hover:text-amber-600 transition-colors nav-link">Comparativa</a>
+                    <a href="#contexto" class="hover:text-amber-600 transition-colors nav-link">Contexto</a>
+                    <a href="#filosofos" class="hover:text-amber-600 transition-colors nav-link">Filósofos</a>
+                    <a href="#debate" class="hover:text-amber-600 transition-colors nav-link">El Gran Debate</a>
+                    <a href="#legado" class="hover:text-amber-600 transition-colors nav-link">Legado</a>
+                    <a href="#actividad" class="hover:text-amber-600 transition-colors nav-link">Actividad</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="intro" class="flex items-center bg-stone-200">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center py-20">
+                <div class="mb-8">
+                    <a href='https://postimg.cc/YvnmyDf7' target='_blank'><img src='https://i.postimg.cc/W4j6zQdd/Leonardo-Kino-XL-a-cinematic-photo-of-Create-a-minimalist-and-1.jpg' border='0' alt='Logo del origen de la filosofía' class='mx-auto rounded-full w-32 h-32 object-cover shadow-lg'/></a>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold text-amber-800 leading-tight">El Amanecer del Logos</h1>
+                <p class="mt-4 text-lg md:text-xl max-w-3xl mx-auto text-stone-700">
+                    Una exploración interactiva del origen del pensamiento filosófico, desde la narrativa mítica hasta el nacimiento de la razón crítica en la Antigua Grecia.
+                </p>
+                <a href="#mythos-logos" class="mt-8 inline-block bg-amber-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-700 transition-all transform hover:scale-105">
+                    Iniciar el Viaje
+                </a>
+            </div>
+        </section>
+
+        <section id="mythos-logos" class="py-20 bg-stone-50">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">Mythos frente a Logos</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-lg text-stone-600">
+                        Esta sección contrasta las dos cosmovisiones fundamentales. El *Mythos* explica el mundo a través de narrativas divinas y arbitrarias, mientras que el *Logos* busca explicaciones basadas en la razón, la observación y leyes universales.
+                    </p>
+                </div>
+
+                <div class="max-w-2xl mx-auto my-8 rounded-lg shadow-xl overflow-hidden">
+                    <div class="aspect-w-16">
+                        <iframe src="https://www.youtube.com/embed/puggrpGNPkU" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    </div>
+                </div>
+                
+                <div class="max-w-4xl mx-auto overflow-hidden border border-stone-300 rounded-lg shadow-md">
+                    <div class="grid grid-cols-1 md:grid-cols-3">
+                        <div class="font-bold text-lg bg-stone-200 p-4 border-b md:border-b-0 md:border-r border-stone-300">Criterio</div>
+                        <div class="font-bold text-lg bg-stone-200 p-4 border-b md:border-b-0 md:border-r border-stone-300">Mythos (Pensamiento Mítico)</div>
+                        <div class="font-bold text-lg bg-stone-200 p-4 border-b md:border-b-0 border-stone-300">Logos (Pensamiento Racional)</div>
+                    </div>
+                    <div id="comparison-table" class="text-stone-700">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contexto" class="py-20 bg-stone-200">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">El Crisol de Jonia</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-lg text-stone-600">
+                        La filosofía no nació en un vacío. Floreció en el siglo VI a.C. en las prósperas ciudades jonias gracias a una confluencia única de factores sociales, económicos y culturales que fomentaron la duda, el debate y la libertad de pensamiento.
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="bg-stone-50 p-6 rounded-lg shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
+                        <h3 class="font-bold text-xl text-amber-700">🗺️ Cruce de Culturas</h3>
+                        <p class="mt-2 text-stone-600">El intenso comercio en puertos como Mileto expuso a los griegos a diversas culturas (egipcia, babilónica), relativizando sus propios mitos y abriendo la mente a nuevas ideas.</p>
+                    </div>
+                    <div class="bg-stone-50 p-6 rounded-lg shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
+                        <h3 class="font-bold text-xl text-amber-700">🏛️ La Polis y el Debate</h3>
+                        <p class="mt-2 text-stone-600">La ciudad-estado (*polis*) creó un espacio público donde los ciudadanos debatían. La argumentación y la persuasión se convirtieron en herramientas sociales clave, cultivando el pensamiento lógico.</p>
+                    </div>
+                    <div class="bg-stone-50 p-6 rounded-lg shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
+                        <h3 class="font-bold text-xl text-amber-700">🕊️ Libertad Intelectual</h3>
+                        <p class="mt-2 text-stone-600">A diferencia de otros imperios, no había una casta sacerdotal que impusiera un dogma religioso. Esta libertad permitió proponer y discutir ideas radicales sin temor a la herejía.</p>
+                    </div>
+                     <div class="bg-stone-50 p-6 rounded-lg shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
+                        <h3 class="font-bold text-xl text-amber-700">✍️ La Escritura Alfabética</h3>
+                        <p class="mt-2 text-stone-600">La difusión de un alfabeto fácil de aprender permitió fijar el pensamiento, analizarlo, criticarlo y encontrar contradicciones, fomentando la coherencia y el rigor conceptual.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="filosofos" class="py-20 bg-stone-50">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">La Senda de los Primeros Filósofos</h2>
+                    <p class="mt-3 max-w-3xl mx-auto text-lg text-stone-600">
+                        Esta sección traza el camino de los primeros pensadores, mostrando cómo la filosofía avanzó a través de la crítica y el refinamiento. Haz clic en cada filósofo para explorar sus ideas revolucionarias sobre la naturaleza fundamental de la realidad (*arché*) y cómo intentaron explicar el cosmos sin recurrir a los dioses.
+                    </p>
+                </div>
+                
+                <!-- Custom Audio Player -->
+                <div id="custom-audio-player" class="mb-16 max-w-md mx-auto bg-stone-100 p-4 rounded-lg shadow-inner border border-stone-200">
+                    <audio id="audio-element" src="https://files.catbox.moe/3qdvtu.wav" preload="metadata"></audio>
+                    <div class="flex items-center space-x-4">
+                        <button id="play-pause-btn" class="w-12 h-12 flex items-center justify-center rounded-full bg-amber-600 text-white shadow-md hover:bg-amber-700 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-stone-100">
+                            <span id="play-icon" class="text-2xl pl-1">▶</span>
+                            <span id="pause-icon" class="text-2xl hidden">❚❚</span>
+                        </button>
+                        <div class="flex-grow flex items-center space-x-3">
+                            <span id="current-time" class="text-sm font-mono text-stone-600">0:00</span>
+                            <div id="progress-bar-container" class="w-full bg-stone-300 rounded-full h-2 cursor-pointer">
+                                <div id="progress-bar" class="bg-amber-600 h-2 rounded-full" style="width: 0%;"></div>
+                            </div>
+                            <span id="total-duration" class="text-sm font-mono text-stone-600">0:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-16">
+                        <div class="md:col-span-3 text-center mb-8">
+                            <h3 class="text-2xl font-bold text-amber-800">La Escuela de Mileto: La Búsqueda del Principio Material</h3>
+                        </div>
+                        <div class="relative flex flex-col items-center timeline-item">
+                            <div class="relative z-10">
+                                <button data-philosopher="tales" class="philosopher-btn bg-white border-2 border-amber-600 rounded-full w-24 h-24 flex items-center justify-center text-center font-bold text-amber-700 hover:bg-amber-50 transition-colors">Tales</button>
+                            </div>
+                            <div class="hidden md:block timeline-connector"></div>
+                        </div>
+                        <div class="relative flex flex-col items-center timeline-item">
+                            <div class="relative z-10">
+                                <button data-philosopher="anaximandro" class="philosopher-btn bg-white border-2 border-amber-600 rounded-full w-24 h-24 flex items-center justify-center text-center font-bold text-amber-700 hover:bg-amber-50 transition-colors">Anaximandro</button>
+                            </div>
+                             <div class="hidden md:block timeline-connector"></div>
+                        </div>
+                        <div class="relative flex flex-col items-center">
+                            <div class="relative z-10">
+                                <button data-philosopher="anaximenes" class="philosopher-btn bg-white border-2 border-amber-600 rounded-full w-24 h-24 flex items-center justify-center text-center font-bold text-amber-700 hover:bg-amber-50 transition-colors">Anaxímenes</button>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-3 text-center my-12 pt-8 border-t-2 border-dashed border-stone-300">
+                            <h3 class="text-2xl font-bold text-amber-800">La Expansión de la Razón: Nuevos Paradigmas</h3>
+                        </div>
+
+                        <div class="relative flex flex-col items-center timeline-item">
+                             <div class="relative z-10">
+                                <button data-philosopher="jenofanes" class="philosopher-btn bg-white border-2 border-sky-600 rounded-full w-24 h-24 flex items-center justify-center text-center font-bold text-sky-700 hover:bg-sky-50 transition-colors">Jenófanes</button>
+                             </div>
+                             <div class="hidden md:block timeline-connector"></div>
+                        </div>
+                        <div class="relative flex flex-col items-center timeline-item">
+                            <div class="relative z-10">
+                                <button data-philosopher="pitagoras" class="philosopher-btn bg-white border-2 border-sky-600 rounded-full w-24 h-24 flex items-center justify-center text-center font-bold text-sky-700 hover:bg-sky-50 transition-colors">Pitágoras</button>
+                            </div>
+                             <div class="hidden md:block timeline-connector"></div>
+                        </div>
+                        <div class="relative flex flex-col items-center">
+                            <div class="relative z-10">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="debate" class="py-20 bg-stone-200">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">El Gran Debate: Ser vs. Devenir</h2>
+                    <p class="mt-3 max-w-3xl mx-auto text-lg text-stone-600">
+                        El choque entre Heráclito y Parménides marcó un punto de inflexión. ¿Es la realidad un flujo constante o una unidad inmutable? Este debate sobre el cambio y la permanencia sentó las bases de la metafísica occidental. El gráfico de radar visualiza sus posturas opuestas en conceptos clave.
+                    </p>
+                </div>
+                <div class="bg-stone-50 p-4 sm:p-6 md:p-8 rounded-lg shadow-lg">
+                    <div class="chart-container">
+                        <canvas id="debateChart"></canvas>
+                    </div>
+                     <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 text-center">
+                        <div>
+                            <h3 class="text-2xl font-semibold text-red-700">Heráclito: "Todo Fluye"</h3>
+                            <p class="mt-2 text-stone-600">La realidad es un proceso de cambio incesante (*panta rhei*), una "guerra" de opuestos que genera una armonía dinámica. El *Logos* es la ley universal que rige este devenir.</p>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-semibold text-blue-700">Parménides: "El Ser es"</h3>
+                            <p class="mt-2 text-stone-600">La razón pura demuestra que el cambio es una ilusión de los sentidos. La verdadera realidad (el Ser) es una, eterna, indivisible e inmóvil. Lo que es, es; lo que no es, no es.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="legado" class="py-20 bg-stone-50">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">El Legado Inmortal</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-lg text-stone-600">
+                        Los presocráticos no solo rompieron con el mito; inauguraron la tradición racional de Occidente. Sus preguntas y conceptos fundamentales se convirtieron en los cimientos sobre los que se edificaron la filosofía y la ciencia.
+                    </p>
+                </div>
+                <div class="max-w-3xl mx-auto space-y-4 text-stone-700 text-left">
+                    <p>💡 <span class="font-semibold">Fundamento de la Filosofía Posterior:</span> El debate entre Heráclito y Parménides sobre el cambio y la permanencia fue el problema central que Platón intentó resolver con su Teoría de las Ideas. Aristóteles, a su vez, sistematizó el estudio de la naturaleza (*physis*) iniciado por los milesios.</p>
+                    <p>🔬 <span class="font-semibold">Precursores de la Ciencia:</span> La idea de un *cosmos* ordenado, inteligible y gobernado por leyes naturales es la base de toda investigación científica. El atomismo de Leucipo y Demócrito, en particular, anticipó un modelo fundamental de la física moderna.</p>
+                    <p>❓ <span class="font-semibold">Las Preguntas Eternas:</span> ¿Cuál es la naturaleza última de la realidad? ¿Qué podemos conocer con certeza? ¿Cómo se relaciona la mente con la materia? Las preguntas que ellos formularon por primera vez siguen resonando en el corazón de la filosofía actual.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="actividad" class="py-20 bg-stone-200">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">Comprueba tu Comprensión</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-lg text-stone-600">
+                        Es hora de poner a prueba tus conocimientos. Selecciona una respuesta y la página avanzará a la siguiente pregunta. Al final, podrás ver tu puntuación.
+                    </p>
+                </div>
+
+                <div id="quiz-container" class="max-w-3xl mx-auto space-y-8"></div>
+
+                <div class="text-center mt-12">
+                    <button id="check-quiz-btn" class="bg-amber-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-700 transition-all transform hover:scale-105">
+                        Calcular Puntuación Final
+                    </button>
+                    <div id="quiz-results" class="mt-6 text-xl font-semibold"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-stone-800 text-stone-300 py-6">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p>&copy; 2024 Exploración del Pensamiento Filosófico. Creado como una herramienta educativa.</p>
+        </div>
+    </footer>
+
+    <!-- Modal Structure -->
+    <div id="philosopher-modal" class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none scale-95">
+        <div class="modal-content bg-stone-50 rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95">
+            <div class="p-6 md:p-8">
+                <div class="flex justify-between items-start">
+                    <h2 id="modal-title" class="text-3xl font-bold text-amber-800 mb-4"></h2>
+                    <button id="close-modal" class="text-3xl text-stone-500 hover:text-stone-800">&times;</button>
+                </div>
+                <div id="modal-body" class="prose prose-stone max-w-none text-stone-700"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const comparisonData = [
+                {
+                    criterion: 'Fundamento',
+                    mythos: 'Imaginación, fantasía, tradición. Basado en la creencia colectiva.',
+                    logos: 'Razón, observación, experiencia. Basado en argumentos y pruebas.'
+                },
+                {
+                    criterion: 'Tipo de Explicación',
+                    mythos: 'Narrativa y simbólica. Los sucesos son causados por la voluntad arbitraria de los dioses.',
+                    logos: 'Causal y sistemática. Los sucesos se rigen por leyes impersonales y necesarias.'
+                },
+                {
+                    criterion: 'Actitud',
+                    mythos: 'Acrítica, tradicional, conservadora.',
+                    logos: 'Crítica, innovadora, revisionista.'
+                },
+                {
+                    criterion: 'Fuente de Autoridad',
+                    mythos: 'Tradición anónima y colectiva.',
+                    logos: 'Autoría individual.'
+                },
+                {
+                    criterion: 'Lenguaje',
+                    mythos: 'Simbólico, metafórico, pintoresco.',
+                    logos: 'Conceptual, abstracto, preciso.'
+                },
+                {
+                    criterion: 'Visión del Mundo',
+                    mythos: 'Un escenario para el drama divino.',
+                    logos: 'Un *cosmos* ordenado (*physis*).'
+                }
+            ];
+
+            const tableBody = document.getElementById('comparison-table');
+            if(tableBody) {
+                comparisonData.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'grid grid-cols-1 md:grid-cols-3 transition-colors duration-300 hover:bg-amber-50';
+                    row.innerHTML = `
+                        <div class="p-4 border-t border-stone-300 font-semibold md:border-r">${item.criterion}</div>
+                        <div class="p-4 border-t border-stone-300 md:border-r">${item.mythos}</div>
+                        <div class="p-4 border-t border-stone-300">${item.logos}</div>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            const philosopherData = {
+                tales: {
+                    title: "Tales de Mileto",
+                    content: `
+                        <h4>El Primer Filósofo (c. 624-546 a.C.)</h4>
+                        <p>Tales es célebre por ser el primero en proponer una explicación naturalista del cosmos, rompiendo con la tradición mítica. Marcó el inicio de la ciencia y la filosofía.</p>
+                        <ul>
+                            <li><strong>Arché (Principio):</strong> 💧 <strong>Agua</strong>. Observó que toda vida necesita humedad, y que el agua puede cambiar de estado (sólido, líquido, gas), sugiriendo que es el origen de todo.</li>
+                            <li><strong>Innovación Clave:</strong> Reemplazó la causa sobrenatural por una causa física. Por ejemplo, explicó los terremotos no como la ira de Poseidón, sino como el balanceo de la Tierra flotando sobre un océano cósmico.</li>
+                            <li><strong>Impacto:</strong> Su explicación, aunque incorrecta, fue revolucionaria porque era <strong>inmanente, natural y comprobable</strong>, abriendo la puerta a la investigación racional.</li>
+                        </ul>`
+                },
+                anaximandro: {
+                    title: "Anaximandro de Mileto",
+                    content: `
+                        <h4>El Salto a la Abstracción (c. 610-546 a.C.)</h4>
+                        <p>Discípulo de Tales, llevó la filosofía a un nuevo nivel de abstracción al criticar la teoría de su maestro y proponer un principio no observable.</p>
+                        <ul>
+                            <li><strong>Crítica a Tales:</strong> ¿Cómo puede una sustancia determinada como el agua (húmeda) generar su opuesto, como el fuego (seco)?</li>
+                            <li><strong>Arché (Principio):</strong> ⚖️ <strong>El Ápeiron</strong> (lo indefinido, ilimitado, infinito). Un principio abstracto y eterno del cual se separan los opuestos (caliente-frío, húmedo-seco) para formar el mundo.</li>
+                            <li><strong>Innovación Clave:</strong> Introdujo la idea de una <strong>ley cósmica</strong> que gobierna el universo. Los opuestos luchan, pero se mantienen en equilibrio pagando "retribución por su injusticia según la disposición del tiempo".</li>
+                        </ul>`
+                },
+                anaximenes: {
+                    title: "Anaxímenes de Mileto",
+                    content: `
+                        <h4>La Sistematización Causal (c. 585-524 a.C.)</h4>
+                        <p>Sintetizó las ideas de Tales y Anaximandro, proponiendo un principio que era a la vez observable y aparentemente infinito, y un mecanismo claro para el cambio.</p>
+                        <ul>
+                            <li><strong>Arché (Principio):</strong> 💨 <strong>Aire (Pneuma)</strong>. Es una sustancia concreta como el agua, pero también es infinita y omnipresente como el ápeiron. Se asocia con la vida a través del aliento (*psyche*).</li>
+                            <li><strong>Innovación Clave:</strong> Propuso el primer mecanismo físico para la transformación: <strong>condensación y rarefacción</strong>.</li>
+                            <li><strong>Mecanismo:</strong> Al rarefacerse, el aire se convierte en fuego. Al condensarse, se vuelve viento, luego nubes, agua, tierra y finalmente piedra. Las diferencias cualitativas se explican por diferencias cuantitativas (densidad).</li>
+                        </ul>`
+                },
+                jenofanes: {
+                    title: "Jenófanes de Colofón",
+                    content: `
+                        <h4>La Crítica a los Dioses (c. 570-475 a.C.)</h4>
+                        <p>A diferencia de los milesios, que criticaban el mito implícitamente, Jenófanes lanzó un ataque directo y explícito contra la religión tradicional homérica.</p>
+                        <ul>
+                           <li><strong>Crítica Moral:</strong> Condenó a los poetas por atribuir a los dioses comportamientos inmorales para los humanos (robo, adulterio, engaño).</li>
+                           <li><strong>Crítica Intelectual:</strong> Atacó el <strong>antropomorfismo</strong>, argumentando que los humanos crean dioses a su propia imagen. "Si los bueyes pudieran dibujar, dibujarían dioses con forma de buey".</li>
+                           <li><strong>Innovación Teológica:</strong> Propuso la existencia de un <strong>dios único</strong>, supremo, inmaterial, inmóvil y que gobierna todo con el pensamiento. Es el inicio de la teología filosófica y el monoteísmo en Occidente.</li>
+                        </ul>`
+                },
+                pitagoras: {
+                    title: "Pitágoras de Samos",
+                    content: `
+                        <h4>El Cosmos es Número (c. 570-495 a.C.)</h4>
+                        <p>La escuela pitagórica introdujo una idea radicalmente nueva: el principio fundamental del universo no es una sustancia material, sino una abstracción matemática.</p>
+                        <ul>
+                           <li><strong>Arché (Principio):</strong> 🔢 <strong>El Número</strong>. Observaron que las armonías musicales correspondían a simples proporciones numéricas, y extrapolaron que todo el universo está estructurado matemáticamente.</li>
+                           <li><strong>Visión del Mundo:</strong> El universo es un <strong>*cosmos*</strong>: un todo ordenado y armonioso. Los cuerpos celestes, en sus órbitas, producen una "música de las esferas" inaudible.</li>
+                           <li><strong>Filosofía y Religión:</strong> Combinaron la investigación matemática con creencias místicas como la <strong>transmigración de las almas</strong> (*metempsicosis*), que debían purificarse a través del estudio y el ascetismo.</li>
+                        </ul>`
+                }
+            };
+
+            const modal = document.getElementById('philosopher-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const closeModalBtn = document.getElementById('close-modal');
+
+            document.querySelectorAll('.philosopher-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const philosopherId = button.dataset.philosopher;
+                    const data = philosopherData[philosopherId];
+                    if (data) {
+                        modalTitle.textContent = data.title;
+                        modalBody.innerHTML = data.content;
+                        modal.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+                        modal.querySelector('.modal-content').classList.remove('scale-95');
+                    }
+                });
+            });
+
+            const closeModal = () => {
+                modal.classList.add('opacity-0', 'scale-95');
+                modal.querySelector('.modal-content').classList.add('scale-95');
+                setTimeout(() => modal.classList.add('pointer-events-none'), 300);
+            };
+            
+            closeModalBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+            
+            const debateCtx = document.getElementById('debateChart').getContext('2d');
+            if (debateCtx) {
+                const debateChart = new Chart(debateCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Cambio', 'Razón Pura', 'Permanencia', 'Mundo Sensible', 'Unidad del Ser'],
+                        datasets: [{
+                            label: 'Heráclito',
+                            data: [5, 3, 1, 4, 4],
+                            backgroundColor: 'rgba(220, 38, 38, 0.2)',
+                            borderColor: 'rgba(220, 38, 38, 1)',
+                            pointBackgroundColor: 'rgba(220, 38, 38, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(220, 38, 38, 1)'
+                        }, {
+                            label: 'Parménides',
+                            data: [1, 5, 5, 1, 5],
+                            backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                            borderColor: 'rgba(37, 99, 235, 1)',
+                            pointBackgroundColor: 'rgba(37, 99, 235, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(37, 99, 235, 1)'
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                angleLines: { color: 'rgba(120, 113, 108, 0.3)' },
+                                grid: { color: 'rgba(120, 113, 108, 0.3)' },
+                                pointLabels: {
+                                    font: { size: 14, family: "'Inter', sans-serif" },
+                                    color: '#44403c'
+                                },
+                                ticks: {
+                                    backdropColor: 'rgba(245, 245, 244, 0.7)',
+                                    color: '#57534e',
+                                    stepSize: 1,
+                                    display: false
+                                },
+                                suggestedMin: 0,
+                                suggestedMax: 5
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    font: { size: 14, family: "'Inter', sans-serif" },
+                                    color: '#292524'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+            const header = document.getElementById('main-header');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: `-${header.offsetHeight}px`,
+                threshold: 0.4 
+            };
+            
+            const sectionObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.remove('active-nav');
+                            if(link.getAttribute('href') === `#${id}`){
+                                link.classList.add('active-nav');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                sectionObserver.observe(section);
+            });
+
+            // Custom Audio Player Logic
+            const audio = document.getElementById('audio-element');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
+            const progressBar = document.getElementById('progress-bar');
+            const progressBarContainer = document.getElementById('progress-bar-container');
+            const currentTimeEl = document.getElementById('current-time');
+            const totalDurationEl = document.getElementById('total-duration');
+
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+
+            function togglePlayPause() {
+                if (audio.paused || audio.ended) {
+                    audio.play();
+                    playIcon.classList.add('hidden');
+                    pauseIcon.classList.remove('hidden');
+                } else {
+                    audio.pause();
+                    playIcon.classList.remove('hidden');
+                    pauseIcon.classList.add('hidden');
+                }
+            }
+
+            function updateProgress() {
+                const { currentTime, duration } = audio;
+                if (duration) {
+                    const progressPercent = (currentTime / duration) * 100;
+                    progressBar.style.width = `${progressPercent}%`;
+                    currentTimeEl.textContent = formatTime(currentTime);
+                }
+            }
+            
+            function setInitialDuration() {
+                 if(audio.duration) {
+                    totalDurationEl.textContent = formatTime(audio.duration);
+                 }
+            }
+
+            function seek(e) {
+                const width = this.clientWidth;
+                const clickX = e.offsetX;
+                const duration = audio.duration;
+                if(duration) {
+                    audio.currentTime = (clickX / width) * duration;
+                }
+            }
+            
+            if(audio){
+                playPauseBtn.addEventListener('click', togglePlayPause);
+                audio.addEventListener('timeupdate', updateProgress);
+                audio.addEventListener('loadedmetadata', setInitialDuration);
+                audio.addEventListener('ended', () => {
+                     playIcon.classList.remove('hidden');
+                     pauseIcon.classList.add('hidden');
+                     progressBar.style.width = '0%';
+                });
+                progressBarContainer.addEventListener('click', seek);
+            }
+
+            // Quiz Logic
+            const quizContainer = document.getElementById('quiz-container');
+            const checkQuizBtn = document.getElementById('check-quiz-btn');
+            const quizResults = document.getElementById('quiz-results');
+
+            const quizData = [
+                {
+                    question: "¿Cuál es la principal diferencia entre el *Mythos* y el *Logos*?",
+                    options: [
+                        "El Mythos usa la poesía y el Logos la prosa.",
+                        "El Mythos se basa en la autoridad de la tradición y el Logos en la argumentación racional.",
+                        "El Mythos habla de dioses y el Logos de humanos.",
+                        "El Mythos es griego y el Logos es romano."
+                    ],
+                    answer: 1
+                },
+                {
+                    question: "¿Qué filósofo propuso que el *arché* (principio de todo) era el agua?",
+                    options: [
+                        "Anaximandro",
+                        "Heráclito",
+                        "Tales de Mileto",
+                        "Parménides"
+                    ],
+                    answer: 2
+                },
+                {
+                    question: "La idea de que 'todo fluye' y la realidad es un cambio constante se asocia con:",
+                    options: [
+                        "Parménides",
+                        "Heráclito",
+                        "Pitágoras",
+                        "Anaxímenes"
+                    ],
+                    answer: 1
+                },
+                {
+                    question: "Según Parménides, ¿por qué el cambio es una ilusión?",
+                    options: [
+                        "Porque el Ser es uno, eterno e inmóvil, y el 'no-ser' no existe.",
+                        "Porque los sentidos nos engañan constantemente.",
+                        "Porque todo está hecho de átomos inmutables.",
+                        "Porque el fuego consume y transforma todo."
+                    ],
+                    answer: 0
+                },
+                {
+                    question: "¿Qué mecanismo propuso Anaxímenes para explicar cómo el aire se transforma en otros elementos?",
+                    options: [
+                        "Separación de opuestos",
+                        "Condensación y rarefacción",
+                        "La voluntad de los dioses",
+                        "La mezcla de los cuatro elementos"
+                    ],
+                    answer: 1
+                }
+            ];
+
+            function handleAnswerSelection(questionIndex, selectedValue, questionEl) {
+                const questionData = quizData[questionIndex];
+                const options = questionEl.querySelectorAll(`input[name="question${questionIndex}"]`);
+                
+                options.forEach(opt => opt.disabled = true);
+
+                const selectedLabel = document.querySelector(`input[value="${selectedValue}"][name="question${questionIndex}"]`).parentElement.parentElement;
+                
+                if (parseInt(selectedValue) === questionData.answer) {
+                    selectedLabel.classList.add('correct');
+                } else {
+                    selectedLabel.classList.add('incorrect');
+                    const correctLabel = document.querySelector(`input[value="${questionData.answer}"][name="question${questionIndex}"]`).parentElement.parentElement;
+                    correctLabel.classList.add('correct');
+                }
+
+                const nextQuestionIndex = questionIndex + 1;
+                if (nextQuestionIndex < quizData.length) {
+                    setTimeout(() => {
+                        document.getElementById(`quiz-question-${nextQuestionIndex}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 1200);
+                } else {
+                    setTimeout(() => {
+                        checkQuizBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 1200);
+                }
+            }
+
+            function renderQuiz() {
+                if(!quizContainer) return;
+                quizContainer.innerHTML = '';
+                quizData.forEach((q, index) => {
+                    const questionEl = document.createElement('div');
+                    questionEl.className = 'bg-stone-50 p-6 rounded-lg shadow-sm';
+                    questionEl.id = `quiz-question-${index}`;
+                    
+                    let optionsHTML = '';
+                    q.options.forEach((option, i) => {
+                        optionsHTML += `
+                            <div class="quiz-option border border-stone-200 hover:border-amber-400 rounded p-3">
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="question${index}" value="${i}" class="form-radio h-5 w-5 text-amber-600 focus:ring-amber-500">
+                                    <span class="text-stone-700">${option}</span>
+                                </label>
+                            </div>
+                        `;
+                    });
+
+                    questionEl.innerHTML = `
+                        <p class="font-semibold text-lg text-stone-800 mb-4">${index + 1}. ${q.question}</p>
+                        <div class="space-y-3">${optionsHTML}</div>
+                    `;
+                    quizContainer.appendChild(questionEl);
+
+                    const radioButtons = questionEl.querySelectorAll(`input[name="question${index}"]`);
+                    radioButtons.forEach(radio => {
+                        radio.addEventListener('change', (e) => handleAnswerSelection(index, e.target.value, questionEl));
+                    });
+                });
+            }
+
+            function calculateScore() {
+                let score = 0;
+                quizData.forEach((q, index) => {
+                    const selected = document.querySelector(`input[name="question${index}"]:checked`);
+                    if (selected) {
+                        const answer = parseInt(selected.value);
+                        if (answer === q.answer) {
+                            score++;
+                        }
+                    }
+                });
+
+                quizResults.textContent = `Tu puntuación final es: ${score} de ${quizData.length}.`;
+                if (score === quizData.length) {
+                    quizResults.textContent += ' ¡Excelente! Has dominado los conceptos.';
+                    quizResults.className = 'mt-6 text-xl font-semibold text-green-700';
+                } else if (score >= quizData.length / 2) {
+                    quizResults.textContent += ' ¡Buen trabajo! Has entendido lo esencial.';
+                     quizResults.className = 'mt-6 text-xl font-semibold text-yellow-700';
+                } else {
+                    quizResults.textContent += ' Parece que necesitas repasar un poco. ¡Inténtalo de nuevo!';
+                     quizResults.className = 'mt-6 text-xl font-semibold text-red-700';
+                }
+            }
+
+            if(checkQuizBtn) {
+                checkQuizBtn.addEventListener('click', calculateScore);
+            }
+            
+            renderQuiz();
+        });
+    </script>
+</body>
+</html>
+
